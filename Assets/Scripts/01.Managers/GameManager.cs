@@ -2,16 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : SingletonManager<GameManager>
 {
-    // Start is called before the first frame update
-    void Start()
+    public Player playerInfo;
+    public Player PlayerInfo
     {
-        
+        get { return playerInfo; }
+        set { playerInfo = value; }
     }
 
-    // Update is called once per frame
-    void Update()
+    public Enemy enemyInfo;
+    public Enemy EnemyInfo
+    {
+        get { return enemyInfo; }
+        set { enemyInfo = value; }
+    }
+
+    private void Start()
     {
         
     }
