@@ -70,7 +70,5 @@ public class GameManager : SingletonManager<GameManager>
     public void GameOver()
     {
         gameState = GameState.GameOver;
-
-        Destroy(stageManager.stageInfo);
     }
 }

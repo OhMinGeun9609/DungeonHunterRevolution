@@ -4,15 +4,31 @@ using UnityEngine;
 
 public class AnimationHandler : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    Animator animator;
+
+    private void Awake()
     {
-        
+        animator = GetComponentInChildren<Animator>();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void OnRunAnime(bool isRun)
     {
-        
+        animator.SetBool("isMove", isRun);
+    }
+    public void OnAttackAnime()
+    {
+        animator.SetTrigger("isAttack");
+    }
+    public void OnHitAnime()
+    {
+        animator.SetTrigger("isHit");
+    }
+    public void OnDeathAnime()
+    {
+        animator.SetTrigger("isDeath");
+    }
+    public void SetAnimeSpeed(float speed)
+    {
+        animator.speed = speed;
     }
 }

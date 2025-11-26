@@ -10,7 +10,8 @@ public enum AIState
 {
     Idle,
     Wandering,
-    Attacking
+    Attacking,
+    Fleeing
 }
 
 public class Enemy : MonoBehaviour, IDamagable, IAttackable
@@ -26,6 +27,7 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
     [Header("AI")]
     private NavMeshAgent agent;
     public float detectDistance;
+    public float safeDistance;
     private AIState state;
 
     [Header("Wandering")]
@@ -60,9 +62,17 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
 
     private void Update()
     {
+        if (GameManager.Instance.PlayerInfo == null)
+        {
+            SetState(AIState.Idle);
+            return;
+        }
+
         if (isAlive)
         {
             playerDistance = Vector3.Distance(transform.position, GameManager.Instance.PlayerInfo.transform.position);
+
+            animationHandler.OnRunAnime(state != AIState.Idle);
 
             switch (state)
             {
@@ -73,6 +83,10 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
                     PassiveUpdate();
                     break;
                 case AIState.Attacking:
+                    AttackingUpdate();
+                    break;
+                case AIState.Fleeing:
+                    FleeingUpdate();
                     break;
             }
         }
@@ -80,7 +94,7 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
 
     private void SetState(AIState aiState)
     {
-        aiState = state;
+        state = aiState;
 
         switch (aiState)
         {
@@ -96,9 +110,14 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
                 agent.speed = runSpeed;
                 agent.isStopped = false;
                 break;
+            case AIState.Fleeing:
+                agent.speed = runSpeed;
+                agent.isStopped = false;
+                break;
         }
 
         // Todo 애니메이션 스피드 조절
+        animationHandler.SetAnimeSpeed(agent.speed / walkSpeed);
     }
 
     public float EnemyGetPercentage()
@@ -115,6 +134,90 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
         // 애니메이션 재생
     }
 
+    private void AttackingUpdate()
+    {
+        if (GameManager.Instance.PlayerInfo == null)
+        {
+            SetState(AIState.Idle);
+            return;
+        }
+
+        if(playerDistance < attackDistance && IsPlayerInFieldOfView())
+        {
+            agent.isStopped = true;
+            if(Time.time - lastAttackTime > attackRate)
+            {
+                lastAttackTime = Time.time;
+                GameManager.Instance.PlayerInfo.status.GetComponent<IDamagable>().Damaged(data.atk);
+
+                animationHandler.SetAnimeSpeed(1f);
+                animationHandler.OnAttackAnime();
+            }
+        }
+        else
+        {
+            if(playerDistance < detectDistance)
+            {
+                agent.isStopped = false;
+                NavMeshPath path = new NavMeshPath();
+                if(agent.CalculatePath(GameManager.Instance.PlayerInfo.transform.position, path))
+                {
+                    agent.SetDestination(GameManager.Instance.PlayerInfo.transform.position);
+                }
+            }
+            else
+            {
+                agent.SetDestination(transform.position);
+                agent.isStopped = true;
+                SetState(AIState.Wandering);
+            }
+        }
+    }
+
+    void FleeingUpdate()
+    {
+        if(agent.remainingDistance > 0.1f)
+        {
+            agent.SetDestination(GetFleeLocation());
+        }
+        else
+        {
+            SetState(AIState.Wandering);
+        }
+    }
+
+    Vector3 GetFleeLocation()
+    {
+        NavMeshHit hit;
+
+        NavMesh.SamplePosition(transform.position + (Random.onUnitSphere * safeDistance), out hit, maxWanderDistance, NavMesh.AllAreas);
+
+        int i = 0;
+        while(GetDestinationAngle(hit.position) > 90 || playerDistance < safeDistance)
+        {
+            NavMesh.SamplePosition(transform.position + (Random.onUnitSphere * safeDistance), out hit, maxWanderDistance, NavMesh.AllAreas);
+            i++;
+            if(i == 30)
+            {
+                break;
+            }
+        }
+
+        return hit.position;
+    }
+
+    float GetDestinationAngle(Vector3 targetPos)
+    {
+        return Vector3.Angle(transform.position - GameManager.Instance.transform.position, transform.position + targetPos);
+    }
+
+    bool IsPlayerInFieldOfView()
+    {
+        Vector3 directionToPlayer = GameManager.Instance.PlayerInfo.transform.position - transform.position;
+        float angle = Vector3.Angle(transform.forward, directionToPlayer);
+        return angle < fieldOfView * 0.5f;
+    }
+
     public void Damaged(int damage)
     {
         data.enemyCurrentHp -= damage;
@@ -124,7 +227,10 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
             isAlive = false;
             GiveRewards();
             stage.EnemyDecrease();
+            animationHandler.OnDeathAnime();
         }
+
+        animationHandler.OnHitAnime();
     }
 
     private void PassiveUpdate()

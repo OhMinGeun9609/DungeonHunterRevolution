@@ -26,8 +26,6 @@ public class PlayerStatus : MonoBehaviour, IAttackable, IDamagable
     public int playerExp = 0;
     [Range(5f, 20f)] public float playerSpeed = 5.0f;
 
-    private IDamagable Idamageable;
-
     public Transform target;
 
     private void Start()
@@ -54,7 +52,6 @@ public class PlayerStatus : MonoBehaviour, IAttackable, IDamagable
 
     public void Attack(int atkDamage)
     {
-        Idamageable.Damaged(atkDamage);
         MpCharge();
     }
 
