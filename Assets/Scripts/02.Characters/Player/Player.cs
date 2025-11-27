@@ -5,17 +5,13 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public Transform weaponPos;
-
     public GameObject player;
     public PlayerStatus status;
     public PlayerInventory inventory;
-    Camera camera;
     private AnimationHandler animationHandler;
 
     private void Start()
     {
-        camera = Camera.main;
         GameManager.Instance.PlayerInfo = this;
         status = GetComponent<PlayerStatus>();
         inventory = GetComponent<PlayerInventory>();
@@ -31,5 +27,27 @@ public class Player : MonoBehaviour
     {
         Destroy(this.gameObject);
         GameManager.Instance.GameOver();
+    }
+
+    public void OnPlayerAnime(PlayerState state)
+    {
+        switch(state)
+        {
+            case PlayerState.Run:
+                animationHandler.OnRunAnime(true);
+                break;
+            case PlayerState.Attacking:
+                animationHandler.OnAttackAnime();
+                break;
+            case PlayerState.Dead:
+                animationHandler.OnDeathAnime();
+                PlayerDead();
+                break;
+            case PlayerState.Hit:
+                animationHandler.OnHitAnime();
+                break;
+            default :
+                break;
+        }
     }
 }

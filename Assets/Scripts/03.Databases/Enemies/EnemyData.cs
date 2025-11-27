@@ -31,6 +31,8 @@ public class EnemyData : ScriptableObject
     public int atk;
     public int def;
     public int rewardExp;
+    public int rewardGold;
+    public GameObject[] dropPrefabs;
     public GameObject enemyPrefab;
 
     [Header("AttackRange")]

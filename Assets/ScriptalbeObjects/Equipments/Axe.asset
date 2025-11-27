@@ -14,11 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ItemType: 0
   handedType: 0
+  equipmentType: 0
   icon: {fileID: 21300000, guid: af50dc4fa7b6d314895d0f8c79adb4a5, type: 3}
   prefab: {fileID: 1654379487897485677, guid: b66e2b9cf4194e248b6f9030abee828b, type: 3}
-  itemName: "\uD55C\uC190\uB3C4\uB07C"
-  itemDescription: "\uACF5\uACA9\uB825 : +10"
+  itemName: Axe
+  itemDescription: 'atk : +10'
   atk: 10
+  isEquip: 1
+  isExist: 0
   canStack: 0
   maxStackAmount: 0
   consumables: []

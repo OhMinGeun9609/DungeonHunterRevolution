@@ -5,12 +5,14 @@ using UnityEngine;
 
 public class StageInfo : MonoBehaviour
 {
-    public StageManager stageManager;
+    private StageManager stageManager;
 
 
     public EnemyData enemy;
     public List<Transform> enemySpawnPositions;
     [SerializeField] public Transform playerPos;
+    private Transform goalPos;
+    private Vector3 spawnPosOffset = new Vector3(5f, 0, 0);
 
     public int maxSpawn;
     public int StageNumber;
@@ -20,7 +22,7 @@ public class StageInfo : MonoBehaviour
 
     private void Start()
     {
-        stageManager = GetComponentInParent<StageManager>();
+        stageManager = GameManager.Instance.stageManager;
         SpawnEnemyPerCount();
     }
 
@@ -36,7 +38,7 @@ public class StageInfo : MonoBehaviour
     {
         while(maxSpawn >= spawnEnemyCount)
         {
-            Instantiate(enemy.enemyPrefab, enemySpawnPositions[0].transform.position, Quaternion.identity);
+            Instantiate(enemy.enemyPrefab, enemySpawnPositions[0].transform.position + spawnPosOffset, Quaternion.identity);
             spawnEnemyCount++;
         }
     }
@@ -49,5 +51,11 @@ public class StageInfo : MonoBehaviour
         {
             enemyExist = false;
         }
+    }
+
+    public Transform ReturnGoalPos()
+    {
+        goalPos = transform.Find("GoalPos");
+        return goalPos;
     }
 }

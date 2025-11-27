@@ -14,11 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ItemType: 0
   handedType: 0
+  equipmentType: 0
   icon: {fileID: 21300000, guid: af50dc4fa7b6d314895d0f8c79adb4a5, type: 3}
   prefab: {fileID: 1376673219720920492, guid: 47691905d383c2d43afe6eed04cdaa05, type: 3}
-  itemName: "\uD22C\uD578\uB4DC\uC18C\uB4DC"
-  itemDescription: "\uACF5\uACA9\uB825 + 18"
+  itemName: TwoHandSword
+  itemDescription: 'atk : + 18'
   atk: 18
+  isEquip: 0
+  isExist: 0
   canStack: 0
   maxStackAmount: 0
   consumables: []

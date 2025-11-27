@@ -15,10 +15,12 @@ MonoBehaviour:
   enemyName: "\uC801"
   enemyType: 0
   enemyMaxHp: 500
-  enemyCurrentHp: 500
+  enemyCurrentHp: 30
   atk: 20
   def: 10
   rewardExp: 10
+  rewardGold: 0
+  dropPrefabs: []
   enemyPrefab: {fileID: 4010228452905165014, guid: e97441aa287bbe340be09c673823c23e, type: 3}
   enemyAttackRange:
     attackType: 1

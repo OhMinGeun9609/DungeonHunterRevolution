@@ -2,12 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IDisplayable
-{
-    public string DisplayItemData();
-}
 
-public class ItemObject : MonoBehaviour, IDisplayable
+public class ItemObject : MonoBehaviour
 {
     public ItemData ItemData;
 

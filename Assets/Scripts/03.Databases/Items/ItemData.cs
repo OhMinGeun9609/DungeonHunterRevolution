@@ -7,6 +7,13 @@ public enum ItemType
     Equipments,
     Consumable
 }
+
+public enum EquipmentType
+{
+    Weapon,
+    Aromor
+}
+
 public enum HandedType
 {
     OneHanded,
@@ -32,6 +39,7 @@ public class ItemData : ScriptableObject
     [Header("Item Info")]
     public ItemType ItemType;
     public HandedType handedType;
+    public EquipmentType equipmentType;
     public Sprite icon;
     public GameObject prefab;
     public string itemName;

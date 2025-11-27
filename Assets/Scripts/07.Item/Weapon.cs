@@ -7,38 +7,46 @@ public class Weapon : MonoBehaviour
 {
     public ItemData data;
     private Enemy enemy;
-    private Player player;
+    private PlayerStatus player;
     private bool isPlayer;
     private int atk;
+    private Rigidbody rb;
 
     private void Start()
-    {
+     {
+        rb = GetComponent<Rigidbody>();
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         enemy = transform.root.GetComponent<Enemy>();
-        player = transform.root.GetComponent<Player>();
+        player = GetComponentInParent<PlayerStatus>();
         atk = data.atk;
 
-        if(enemy == null && player == null)
+        isPlayer = player != null;
+
+        if(isPlayer)
         {
-            isPlayer = false;
+            Debug.Log("PlayerOn");
         }
-        else if(enemy != null)
-        {
-            isPlayer = false;
-        }
-        else if(player != null)
-        {
-            isPlayer = true;
-        }
+    }
+
+    private void Init()
+    {
+        
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(isPlayer)
+        Debug.Log("Hit: " + collision.gameObject.name +
+          ", ROOT: " + collision.transform.root.name);
+
+        if (collision.transform.root == transform.root)
+            return;
+
+        if (collision.gameObject.TryGetComponent<IDamagable>(out IDamagable inter))
         {
-            if(collision.gameObject.TryGetComponent<IDamagable>(out IDamagable component))
-            {
-                component.Damaged(GetDamage(atk));
-            }
+            if(isPlayer && collision.gameObject.GetComponent<Enemy>())
+                inter.Damaged(GetDamage(atk));
+            else if (!isPlayer && collision.gameObject.CompareTag("Player"))
+                inter.Damaged(GetDamage(atk));
         }
     }
 

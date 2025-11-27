@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
+using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 
 public enum AIState
@@ -16,11 +18,12 @@ public enum AIState
 
 public class Enemy : MonoBehaviour, IDamagable, IAttackable
 {
-    [SerializeField] private StageInfo stage;
     [SerializeField] private EnemyData data;
     private bool isAlive;
 
     [Header("Stats")]
+    private int curHp;
+    private int maxHp;
     public float walkSpeed;
     public float runSpeed;
 
@@ -48,17 +51,21 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
     private AnimationHandler animationHandler;
     private SkinnedMeshRenderer[] skinnedMeshRenderer;
     private StageInfo stageInfo;
+    private Player player;
 
     private void Start()
     {
-        isAlive = true;
-        agent = GetComponent<NavMeshAgent>();
-        animationHandler = GetComponent<AnimationHandler>();
-        skinnedMeshRenderer = GetComponentsInChildren<SkinnedMeshRenderer>();
+         isAlive = true;
+         agent = GetComponent<NavMeshAgent>();
+         animationHandler = GetComponent<AnimationHandler>();
+         skinnedMeshRenderer = GetComponentsInChildren<SkinnedMeshRenderer>();
+         player = GameManager.Instance.PlayerInfo;
+         maxHp = data.enemyMaxHp;
+         curHp = data.enemyCurrentHp;
 
-        stageInfo = GetComponentInParent<StageInfo>();
+         stageInfo = GameManager.Instance.StageManager.stageInfo;
         SetState(AIState.Wandering);
-    }
+      }
 
     private void Update()
     {
@@ -119,16 +126,6 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
         // Todo 애니메이션 스피드 조절
         animationHandler.SetAnimeSpeed(agent.speed / walkSpeed);
     }
-
-    public float EnemyGetPercentage()
-    {
-        float percentage;
-
-        percentage = data.enemyCurrentHp / data.enemyMaxHp;
-
-        return percentage;
-    }
-
     public void Attack(int AtkDamage)
     {
         // 애니메이션 재생
@@ -142,13 +139,12 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
             return;
         }
 
-        if(playerDistance < attackDistance && IsPlayerInFieldOfView())
+        if (playerDistance < attackDistance && IsPlayerInFieldOfView())
         {
             agent.isStopped = true;
-            if(Time.time - lastAttackTime > attackRate)
+            if (Time.time - lastAttackTime > attackRate)
             {
                 lastAttackTime = Time.time;
-                GameManager.Instance.PlayerInfo.status.GetComponent<IDamagable>().Damaged(data.atk);
 
                 animationHandler.SetAnimeSpeed(1f);
                 animationHandler.OnAttackAnime();
@@ -156,11 +152,11 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
         }
         else
         {
-            if(playerDistance < detectDistance)
+            if (playerDistance < detectDistance)
             {
                 agent.isStopped = false;
                 NavMeshPath path = new NavMeshPath();
-                if(agent.CalculatePath(GameManager.Instance.PlayerInfo.transform.position, path))
+                if (agent.CalculatePath(GameManager.Instance.PlayerInfo.transform.position, path))
                 {
                     agent.SetDestination(GameManager.Instance.PlayerInfo.transform.position);
                 }
@@ -176,7 +172,7 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
 
     void FleeingUpdate()
     {
-        if(agent.remainingDistance > 0.1f)
+        if (agent.remainingDistance > 0.1f)
         {
             agent.SetDestination(GetFleeLocation());
         }
@@ -193,11 +189,11 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
         NavMesh.SamplePosition(transform.position + (Random.onUnitSphere * safeDistance), out hit, maxWanderDistance, NavMesh.AllAreas);
 
         int i = 0;
-        while(GetDestinationAngle(hit.position) > 90 || playerDistance < safeDistance)
+        while (GetDestinationAngle(hit.position) > 90 || playerDistance < safeDistance)
         {
             NavMesh.SamplePosition(transform.position + (Random.onUnitSphere * safeDistance), out hit, maxWanderDistance, NavMesh.AllAreas);
             i++;
-            if(i == 30)
+            if (i == 30)
             {
                 break;
             }
@@ -220,14 +216,18 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
 
     public void Damaged(int damage)
     {
-        data.enemyCurrentHp -= damage;
+        curHp -= damage;
+        GameManager.Instance.PlayerInfo.status.MpCharge();
 
-        if (data.enemyCurrentHp == 0)
+        if (curHp < 0)
         {
+            Debug.Log("적 죽음");
             isAlive = false;
             GiveRewards();
-            stage.EnemyDecrease();
+            stageInfo.EnemyDecrease();
             animationHandler.OnDeathAnime();
+
+            Destroy(this.gameObject, 3f);
         }
 
         animationHandler.OnHitAnime();
@@ -273,6 +273,23 @@ public class Enemy : MonoBehaviour, IDamagable, IAttackable
 
     public void GiveRewards()
     {
-        // 리워드 지급 로직
+        if (data.dropPrefabs != null)
+        {
+            player.inventory.GetGold(data.rewardGold);
+            player.status.AddExp(data.rewardExp);
+
+            for (int i = 0; i < data.dropPrefabs.Length; i++)
+            {
+                int dropProbabillty = Random.Range(1, 6);
+                if(dropProbabillty == 5)
+                {
+                    player.inventory.GetItem(data.dropPrefabs[i].GetComponent<ItemObject>().ItemData);
+                }
+            }
+        }
+        else
+        {
+            return;
+        }
     }
 }
